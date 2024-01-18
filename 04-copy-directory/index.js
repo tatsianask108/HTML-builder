@@ -5,10 +5,14 @@ const initialFolderPath = './04-copy-directory/files';
 const copyFolderPath = './04-copy-directory/files-copy';
 
 async function copyDir() {
-  await fs.rm(copyFolderPath, { recursive: true });
-
   try {
-    copyDirRecursively(initialFolderPath, copyFolderPath);
+    try {
+      await fs.access(copyFolderPath);
+      await fs.rm(copyFolderPath, { recursive: true });
+    } catch (error) {
+      await fs.mkdir(copyFolderPath, { recursive: true });
+    }
+    await copyDirRecursively(initialFolderPath, copyFolderPath);
   } catch (error) {
     console.error(`Error: ${error.message}`);
   }
