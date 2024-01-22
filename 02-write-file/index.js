@@ -1,13 +1,15 @@
 const fs = require('fs');
+const path = require('path');
 const readline = require('readline');
+const { stdin, stdout } = process;
 
-const filePath = './02-write-file/text.txt';
-const writableStream = fs.createWriteStream(filePath);
-
-const writeStream = fs.createWriteStream(filePath);
-
-const { stdin: input, stdout: output } = require('node:process');
-const rl = readline.createInterface({ input, output });
+const fileName = 'text.txt';
+const outputFilePath = path.join(__dirname, fileName);
+const writableStream = fs.createWriteStream(outputFilePath);
+const writeStream = fs.createWriteStream(outputFilePath, {
+  encoding: 'utf8',
+});
+const rl = readline.createInterface(stdin, stdout);
 
 console.log('Welcome!');
 

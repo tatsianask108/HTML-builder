@@ -2,46 +2,42 @@
 const fs = require('fs/promises');
 const path = require('path');
 
-const initialFolderPath = './06-build-page/assets';
-const copyFolderPath = './06-build-page/project-dist/assets';
+const initialFolder = path.join(__dirname, 'assets');
+const distFolder = path.join(__dirname, 'project-dist');
+const copyFolder = path.join(distFolder, 'assets');
 
-async function copyDir() {
+async function copyDir(initial, copy) {
   try {
-    try {
-      await fs.access(copyFolderPath);
-      await fs.rm(copyFolderPath, { recursive: true });
-    } catch (error) {
-      await fs.mkdir(copyFolderPath, { recursive: true });
+    await fs.mkdir(copy, { recursive: true });
+    const initFolderFiles = await fs.readdir(initial);
+    const copyFolderFiles = await fs.readdir(copy);
+    for (const file of copyFolderFiles) {
+      const copyFolderPath = path.join(copy, file);
+      if (!initFolderFiles.includes(file)) {
+        await fs.rm(copyFolderPath, { recursive: true });
+      }
     }
-    await copyDirRecursively(initialFolderPath, copyFolderPath);
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
+
+    for (const file of initFolderFiles) {
+      const initFolderPath = path.join(initial, file);
+      const copyFolderPath = path.join(copy, file);
+      const stat = await fs.stat(initFolderPath);
+      if (stat.isDirectory()) {
+        await copyDir(initFolderPath, copyFolderPath);
+      } else {
+        await fs.copyFile(initFolderPath, copyFolderPath);
+      }
+    }
+  } catch (err) {
+    console.error(`Error while copying process: ${err.message}`);
   }
 }
 
-copyDir();
-
-async function copyDirRecursively(initial, copy) {
-  await fs.mkdir(copy, { recursive: true });
-
-  const files = await fs.readdir(initial);
-
-  files.forEach(async (file) => {
-    const initialFilePath = path.join(initial, file);
-    const copyFilePath = path.join(copy, file);
-    const stats = await fs.stat(initialFilePath);
-
-    if (stats.isFile()) {
-      await fs.copyFile(initialFilePath, copyFilePath);
-    } else if (stats.isDirectory()) {
-      await copyDirRecursively(initialFilePath, copyFilePath);
-    }
-  });
-}
+copyDir(initialFolder, copyFolder);
 
 //merge styles
-const stylesPath = './06-build-page/styles';
-const bundlePath = './06-build-page/project-dist';
+const stylesPath = path.join(__dirname, 'styles');
+const bundlePath = path.join(__dirname, 'project-dist');
 const bundledFile = path.join(bundlePath, 'style.css');
 
 async function compileStyles() {
@@ -62,37 +58,37 @@ async function compileStyles() {
 compileStyles();
 
 //bundle html
-const templatePath = './06-build-page/template.html';
-const htmlDistPath = './06-build-page/project-dist/index.html';
-const componentsPath = './06-build-page/components';
+const templatePath = path.join(__dirname, 'template.html');
+const htmlDistPath = path.join(__dirname, 'project-dist', 'index.html');
+const componentsPath = path.join(__dirname, 'components');
 
 async function replaceTemplateTags(template, components, output) {
   try {
-    const templateContent = await fs.readFile(template, 'utf-8');
-    const templateTags = templateContent.match(/\{\{(\w+)\}\}/g);
+    const templateHtml = await fs.readFile(template, 'utf-8');
+    const templateTags = templateHtml.match(/\{\{(\w+)\}\}/g);
 
     if (templateTags) {
-      let modifiedContent = templateContent;
+      let bundledHtml = templateHtml;
       for (const tag of templateTags) {
         const tagName = tag.slice(2, -2);
         const componentFilePath = path.join(components, `${tagName}.html`);
 
         try {
-          if (path.extname(componentFilePath).toLowerCase() === '.html') {
-            const componentContent = await fs.readFile(
+          if (path.extname(componentFilePath) === '.html') {
+            const componentHtml = await fs.readFile(
               componentFilePath,
               'utf-8',
             );
-            modifiedContent = modifiedContent.replace(tag, componentContent);
+            bundledHtml = bundledHtml.replace(tag, componentHtml);
           }
         } catch (error) {
-          console.error('Error:', error.message);
+          // console.error('Error:', error.message);
         }
       }
-      await fs.writeFile(output, modifiedContent, 'utf-8');
+      await fs.writeFile(output, bundledHtml, 'utf-8');
     }
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error(`Error: ${error.message}`);
   }
 }
 

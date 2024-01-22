@@ -1,7 +1,7 @@
 const fs = require('fs/promises');
 const path = require('path');
 
-const folderPath = './03-files-in-folder/secret-folder';
+const folderPath = path.join(__dirname, 'secret-folder');
 
 async function outputToConsole() {
   try {
@@ -12,7 +12,6 @@ async function outputToConsole() {
         const filePath = path.join(folderPath, file.name);
         const { size } = await fs.stat(filePath);
         const fileExtension = path.extname(file.name).slice(1);
-
         console.log(`${file.name} - ${fileExtension} - ${size}B`);
       }
     });

@@ -1,39 +1,34 @@
 const fs = require('fs/promises');
 const path = require('path');
 
-const initialFolderPath = './04-copy-directory/files';
-const copyFolderPath = './04-copy-directory/files-copy';
+const initialFolder = path.join(__dirname, 'files');
+const copyFolder = path.join(__dirname, 'files-copy');
 
-async function copyDir() {
+async function copyDir(initial, copy) {
   try {
-    try {
-      await fs.access(copyFolderPath);
-      await fs.rm(copyFolderPath, { recursive: true });
-    } catch (error) {
-      await fs.mkdir(copyFolderPath, { recursive: true });
+    await fs.mkdir(copy, { recursive: true });
+    const initFolderFiles = await fs.readdir(initial);
+    const copyFolderFiles = await fs.readdir(copy);
+    for (const file of copyFolderFiles) {
+      const copyFolderPath = path.join(copy, file);
+      if (!initFolderFiles.includes(file)) {
+        await fs.rm(copyFolderPath, { recursive: true });
+      }
     }
-    await copyDirRecursively(initialFolderPath, copyFolderPath);
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
+
+    for (const file of initFolderFiles) {
+      const initFolderPath = path.join(initial, file);
+      const copyFolderPath = path.join(copy, file);
+      const stat = await fs.stat(initFolderPath);
+      if (stat.isDirectory()) {
+        await copyDir(initFolderPath, copyFolderPath);
+      } else {
+        await fs.copyFile(initFolderPath, copyFolderPath);
+      }
+    }
+  } catch (err) {
+    console.error(`Error while copying process: ${err.message}`);
   }
 }
 
-copyDir();
-
-async function copyDirRecursively(initial, copy) {
-  await fs.mkdir(copy, { recursive: true });
-
-  const files = await fs.readdir(initial);
-
-  files.forEach(async (file) => {
-    const initialFilePath = path.join(initial, file);
-    const copyFilePath = path.join(copy, file);
-    const stats = await fs.stat(initialFilePath);
-
-    if (stats.isFile()) {
-      await fs.copyFile(initialFilePath, copyFilePath);
-    } else if (stats.isDirectory()) {
-      await copyDirRecursively(initialFilePath, copyFilePath);
-    }
-  });
-}
+copyDir(initialFolder, copyFolder);
