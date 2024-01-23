@@ -5,7 +5,6 @@ const initialFolder = path.join(__dirname, 'files');
 const copyFolder = path.join(__dirname, 'files-copy');
 
 async function copyDir(initial, copy) {
-  try {
     await fs.mkdir(copy, { recursive: true });
     const initFolderFiles = await fs.readdir(initial);
     const copyFolderFiles = await fs.readdir(copy);
@@ -26,9 +25,6 @@ async function copyDir(initial, copy) {
         await fs.copyFile(initFolderPath, copyFolderPath);
       }
     }
-  } catch (err) {
-    console.error(`Error while copying process: ${err.message}`);
-  }
 }
 
 copyDir(initialFolder, copyFolder);

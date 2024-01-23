@@ -6,7 +6,6 @@ const bundlePath = path.join(__dirname, 'project-dist');
 const bundledFile = path.join(bundlePath, 'bundle.css');
 
 async function compileStyles() {
-  try {
     const files = await fs.readdir(stylesPath);
     const cssFiles = files.filter((file) => file.endsWith('.css'));
     const oneCssFile = [];
@@ -16,8 +15,5 @@ async function compileStyles() {
     }
     const bundledCssFile = oneCssFile.join('\n');
     await fs.writeFile(bundledFile, bundledCssFile, 'utf-8');
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-  }
-}
+  } 
 compileStyles();

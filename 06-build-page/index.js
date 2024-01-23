@@ -7,7 +7,6 @@ const distFolder = path.join(__dirname, 'project-dist');
 const copyFolder = path.join(distFolder, 'assets');
 
 async function copyDir(initial, copy) {
-  try {
     await fs.mkdir(copy, { recursive: true });
     const initFolderFiles = await fs.readdir(initial);
     const copyFolderFiles = await fs.readdir(copy);
@@ -28,9 +27,6 @@ async function copyDir(initial, copy) {
         await fs.copyFile(initFolderPath, copyFolderPath);
       }
     }
-  } catch (err) {
-    console.error(`Error while copying process: ${err.message}`);
-  }
 }
 
 copyDir(initialFolder, copyFolder);
@@ -41,7 +37,6 @@ const bundlePath = path.join(__dirname, 'project-dist');
 const bundledFile = path.join(bundlePath, 'style.css');
 
 async function compileStyles() {
-  try {
     const files = await fs.readdir(stylesPath);
     const cssFiles = files.filter((file) => file.endsWith('.css'));
     const oneCssFile = [];
@@ -51,9 +46,6 @@ async function compileStyles() {
     }
     const bundledCssFile = oneCssFile.join('\n');
     await fs.writeFile(bundledFile, bundledCssFile, 'utf-8');
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-  }
 }
 compileStyles();
 
@@ -63,7 +55,6 @@ const htmlDistPath = path.join(__dirname, 'project-dist', 'index.html');
 const componentsPath = path.join(__dirname, 'components');
 
 async function replaceTemplateTags(template, components, output) {
-  try {
     const templateHtml = await fs.readFile(template, 'utf-8');
     const templateTags = templateHtml.match(/\{\{(\w+)\}\}/g);
 
@@ -73,7 +64,7 @@ async function replaceTemplateTags(template, components, output) {
         const tagName = tag.slice(2, -2);
         const componentFilePath = path.join(components, `${tagName}.html`);
 
-        try {
+       
           if (path.extname(componentFilePath) === '.html') {
             const componentHtml = await fs.readFile(
               componentFilePath,
@@ -81,15 +72,10 @@ async function replaceTemplateTags(template, components, output) {
             );
             bundledHtml = bundledHtml.replace(tag, componentHtml);
           }
-        } catch (error) {
-          // console.error('Error:', error.message);
-        }
+      
       }
       await fs.writeFile(output, bundledHtml, 'utf-8');
     }
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-  }
 }
 
 replaceTemplateTags(templatePath, componentsPath, htmlDistPath);
